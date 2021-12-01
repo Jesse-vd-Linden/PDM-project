@@ -256,8 +256,8 @@
       <axis>
         <xyz>0 1 0</xyz>
       </axis>
-<dynamics damping="0.7"/>
-<limit lower="-1.50" upper="0" />
+      <dynamics damping="0.7"/>
+      <limit lower="-1.50" upper="0" />
     </joint>
 
 
