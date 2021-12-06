@@ -25,16 +25,16 @@
             
             
           <collision name='hinge1_collision'>
-            <pose>0 0 0.06 0 0 0</pose>
+            <pose>0 0.021 0.06 0 0 0</pose>
             <geometry>
               <box>
-                <size>.06 0.06 0.06</size>
+                <size>.06 0.02 0.06</size>
               </box>
             </geometry>
           </collision>
 
           <visual name='hinge1_visual'>
-            <pose>0 0.02 0.06 0 0 0</pose>
+            <pose>0 0.021 0.06 0 0 0</pose>
             <geometry>
               <box>
                 <size>.06 0.02 0.06</size>
@@ -43,7 +43,7 @@
           </visual>
           
           <collision name='hinge2_collision'>
-            <pose>0 0.02 0.06 0 0 0</pose>
+            <pose>0 -0.021 0.06 0 0 0</pose>
             <geometry>
               <box>
                 <size>.06 0.02 0.06</size>
@@ -52,7 +52,7 @@
           </collision>
 
           <visual name='hinge2_visual'>
-            <pose>0 -0.02 0.06 0 0 0</pose>
+            <pose>0 -0.021 0.06 0 0 0</pose>
             <geometry>
               <box>
                 <size>.06 -0.02 0.06</size>
@@ -162,6 +162,7 @@
       
       <link name="lower_arm">
       	<mass>0.10</mass>
+      	<gravity>0</gravity>
      	<inertia>
       		<ixx>0.001</ixx>
       		<ixy>0.001</ixy>
@@ -178,7 +179,7 @@
               </box>
             </geometry>
           </collision>
-
+	  <self_collide>1</self_collide>
           <visual name='arm1_visual'>
             <pose>0 0.0 0.3 0 0 0</pose>
             <geometry>
@@ -191,6 +192,7 @@
       
       <link name="upper_arm">
       	<mass>0.10</mass>
+      	<gravity>0</gravity>
      	<inertia>
       		<ixx>0.001</ixx>
       		<ixy>0.001</ixy>
@@ -207,7 +209,7 @@
               </box>
             </geometry>
           </collision>
-
+          <self_collide>1</self_collide>
           <visual name='arm2_visual'>
             <pose>0.13 0.02 0.43 0 0 0</pose>
             <geometry>
@@ -218,7 +220,7 @@
           </visual>
       </link>
       
-      <joint type="continuous" name="left_wheel_hinge">
+      <joint type="revolute" name="left_wheel_hinge">
         <pose>0 0.0 -0.02 0 0 0</pose>
         <child>left_wheel</child>
         <parent>chassis</parent>
@@ -227,7 +229,7 @@
         </axis>
       </joint>
 
-      <joint type="continuous" name="right_wheel_hinge">
+      <joint type="revolute" name="right_wheel_hinge">
         <pose>0 0 0.02 0 0 0</pose>
         <child>right_wheel</child>
         <parent>chassis</parent>
@@ -246,7 +248,6 @@
         </axis>
 	<dynamics damping="0.7" />
         <limit lower="0" upper="1.50" />
-        
       </joint>  
         
       <joint type="revolute" name="upper_arm_hinge">
