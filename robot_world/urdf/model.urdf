@@ -278,4 +278,34 @@
       		<hardwareInterface>EffortJointInterface</hardwareInterface>
       	</joint>
       </transmission>
+
+      <transmission name="right_wheel_trans">
+      	<type>transmission_interface/Simpletransmission</type>
+      	<actuator name="motor2">
+      	<mechanicalReduction>1</mechanicalReduction>
+      	</actuator>
+      	<joint name="right_wheel_hinge">
+      		<hardwareInterface>EffortJointInterface</hardwareInterface>
+      	</joint>
+      </transmission>
+
+      <transmission name="lower_arm_trans">
+      	<type>transmission_interface/Simpletransmission</type>
+      	<actuator name="motor3">
+      	<mechanicalReduction>1</mechanicalReduction>
+      	</actuator>
+      	<joint name="lower_arm_hinge">
+      		<hardwareInterface>EffortJointInterface</hardwareInterface>
+      	</joint>
+      </transmission>
+
+      <transmission name="upper_arm_trans">
+      	<type>transmission_interface/Simpletransmission</type>
+      	<actuator name="motor4">
+      		<mechanicalReduction>1</mechanicalReduction>
+      	</actuator>
+      	<joint name="upper_arm_hinge">
+      		<hardwareInterface>EffortJointInterface</hardwareInterface>
+      	</joint>
+      </transmission>
 </robot>
