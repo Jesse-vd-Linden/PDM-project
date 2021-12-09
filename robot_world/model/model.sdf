@@ -1,0 +1,311 @@
+<?xml version='1.0'?>
+<robot name="our_robot">
+  <static>false</static>
+  <link name='chassis'>
+          <pose>0 0 .1 0 0 0</pose>
+
+          <collision name='collision'>
+            <geometry>
+              <cylinder>
+        <radius>.18</radius>
+        <length>.08</length>
+    </cylinder>
+  </geometry>
+          </collision>
+
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+        <radius>.18</radius>
+        <length>.08</length>
+    </cylinder>
+            </geometry>
+          </visual>
+          
+          
+        <collision name='hinge1_collision'>
+          <pose>0 0.021 0.06 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>.06 0.02 0.06</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name='hinge1_visual'>
+          <pose>0 0.021 0.06 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>.06 0.02 0.06</size>
+            </box>
+          </geometry>
+        </visual>
+        
+        <collision name='hinge2_collision'>
+          <pose>0 -0.021 0.06 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>.06 0.02 0.06</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name='hinge2_visual'>
+          <pose>0 -0.021 0.06 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>.06 -0.02 0.06</size>
+            </box>
+          </geometry>
+        </visual>
+        
+        <collision name='joint_collision'>
+          <pose>0.12 0 -0.04 0 0 0</pose>
+          <geometry>
+              <sphere>
+              <radius>.06</radius>
+            </sphere>
+          </geometry>
+
+          <surface>
+            <friction>
+              <ode>
+                <mu>0</mu>
+                <mu2>0</mu2>
+                <slip1>1.0</slip1>
+                <slip2>1.0</slip2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+
+        <visual name='caster_visual'>
+          <pose>0.12 0 -0.04 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>.06</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        
+        <collision name='joint2_collision'>
+          <pose>-0.12 0 -0.04 0 0 0</pose>
+          <geometry>
+              <sphere>
+              <radius>.06</radius>
+            </sphere>
+          </geometry>
+
+          <surface>
+            <friction>
+              <ode>
+                <mu>0</mu>
+                <mu2>0</mu2>
+                <slip1>1.0</slip1>
+                <slip2>1.0</slip2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+
+        <visual name='caster2_visual'>
+          <pose>-0.12 0 -0.04 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>.06</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        
+      </link>
+      
+      <link name="left_wheel">
+      <pose>0.0 0.206 0.08 0 1.5707 1.5707</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>.08</radius>
+            <length>.05</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+            <radius>.08</radius>
+            <length>.05</length>
+          </cylinder>
+        </geometry>
+      </visual>
+    </link>
+    
+    <link name="right_wheel">
+      <pose>0.0 -0.206 0.08 0 1.5707 1.5707</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>.08</radius>
+            <length>.05</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+            <radius>.08</radius>
+            <length>.05</length>
+          </cylinder>
+        </geometry>
+      </visual>
+    </link>
+    
+    <link name="lower_arm">
+      <mass>0.10</mass>
+      <gravity>0</gravity>
+      <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0.001</ixy>
+          <ixz>0.001</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0.001</iyz>
+          <izz>0.001</izz>
+      </inertia>
+      <collision name='arm1_collision'>
+          <pose>0 0.0 0.3 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>.04 0.02 0.30</size>
+            </box>
+          </geometry>
+      </collision>
+      <self_collide>1</self_collide>
+      <visual name='arm1_visual'>
+        <pose>0 0.0 0.3 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>.04 0.02 0.30</size>
+          </box>
+        </geometry>
+      </visual>
+    </link>
+    
+    <link name="upper_arm">
+      <mass>0.10</mass>
+      <gravity>0</gravity>
+    <inertia>
+        <ixx>0.001</ixx>
+        <ixy>0.001</ixy>
+        <ixz>0.001</ixz>
+        <iyy>0.001</iyy>
+        <iyz>0.001</iyz>
+        <izz>0.001</izz>
+    </inertia>
+      <collision name='arm2_collision'>
+          <pose>0.13 0.02 0.43 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.30 0.02 0.04</size>
+            </box>
+          </geometry>
+        </collision>
+        <self_collide>1</self_collide>
+        <visual name='arm2_visual'>
+          <pose>0.13 0.02 0.43 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.30 0.02 0.04</size>
+            </box>
+          </geometry>
+        </visual>
+    </link>
+    
+    <joint type="revolute" name="left_wheel_hinge">
+      <pose>0 0.0 -0.02 0 0 0</pose>
+      <child>left_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+
+    <joint type="revolute" name="right_wheel_hinge">
+      <pose>0 0 0.02 0 0 0</pose>
+      <child>right_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+    </joint>
+      
+    <joint type="revolute" name="lower_arm_hinge">
+      <pose>0 0 0.17 0 0 0</pose>
+      <origin xyz="0 0 0.17" rpy="0 0 0" />
+      <child>lower_arm</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+      <dynamics damping="0.7" />
+      <limit lower="0" upper="1.50" />
+    </joint>  
+      
+    <joint type="revolute" name="upper_arm_hinge">
+      <pose>0 0 0.43 0 0 0</pose>
+      <origin xyz="0 0 0.43" rpy="0 0 0" />
+      <child>upper_arm</child>        
+      <parent>lower_arm</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+      </axis>
+      <dynamics damping="0.7"/>
+      <limit lower="-1.50" upper="0" />
+    </joint>
+
+
+    <!-- ROS Control plugin for gazebo -->
+    <gazebo>
+      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/our_robot</robotNamespace>
+      </plugin>
+    </gazebo>
+    
+    <transmission name="left_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="motor1">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="left_wheel_hinge">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+
+    <transmission name="right_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="motor2">
+      <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="right_wheel_hinge">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+
+    <transmission name="lower_arm_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="motor3">
+      <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="lower_arm_hinge">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+
+    <transmission name="upper_arm_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="motor4">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="upper_arm_hinge">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+</robot>

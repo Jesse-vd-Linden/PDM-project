@@ -1,11 +1,9 @@
 <launch>
-    <param name="robot_description" textfile="$(find robot_world)/urdf/model.urdf" />
-    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model simple_model -param robot_destription -y -6" />
-
-    <rosparam file="$(find robot_world)/config.config.yml" command="load" />
-    <node name="controller_spawner" pkg="controller_manager" type="spawner" ns="/simple_model"args="left_wheel_position_controller right_wheel_position_controller lower_arm_position_controller upper_arm_position_controller joint_state_controller --shutdown-timeout 3" />
-    
+    <param name="robot_description" textfile="$(find robot_world)/model/model.sdf" />
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model our_robot -param robot_description -y -6" />
+    <rosparam file="$(find robot_world)/config/config.yml" command="load" />
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" ns="/our_robot" args="left_wheel_position_controller right_wheel_position_controller lower_arm_position_controller upper_arm_position_controller joint_state_controller --shutdown-timeout 3" />
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
-        <remap from="/joint_states" to="/simple_model/joint_states" />
+        <remap from="/joint_states" to="/our_robot/joint_states" />
     </node>
 </launch>
