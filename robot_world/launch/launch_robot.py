@@ -13,15 +13,15 @@ def generate_launch_description():
 
     print("sdf_file_name : {}".format(sdf_file_name))
     sdf = os.path.join(sdf_file_name)
-    
-    xml_object = etree.parse('/home/jesse/Documents/pdm/catkin_ws/src/robot_world/model/model.sdf')
+
+    yml_string = yaml.load('/home/mrmeepsle/ros_ws/src/robot_world/config/config.yml')
+    robot_description = DeclareLaunchArgument(
+        "our_robot", default_value=yml_string)
+
+    xml_object = etree.parse('~/ros_ws/src/PDM-project/robot_world/model/model.sdf')
     xml_string = etree.tostring(xml_object).decode()
     robot_description = DeclareLaunchArgument(
         "robot_description", default_value=xml_string)
-
-    yml_string = yaml.load('/home/jesse/Documents/pdm/catkin_ws/src/robot_world/config/config.yml')
-    robot_description = DeclareLaunchArgument(
-        "our_robot", default_value=yml_string)
 
     # rosparam_controller = DeclareLaunchArgument()
 
