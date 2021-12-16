@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="servicebot">
+    <link name="link">
+      <collision name="collision">
+         <geometry>
+              <sphere>
+                <radius>.05</radius>
+              </sphere>
+         </geometry>
+      </collision>
+      <visual name="visual">
+         <geometry>
+              <sphere>
+                <radius>.05</radius>
+              </sphere>
+         </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

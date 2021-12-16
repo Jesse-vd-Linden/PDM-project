@@ -15,15 +15,15 @@ def generate_launch_description():
 
     world = os.path.join(get_package_share_directory(robot_name), 'environment', world_file_name)
 
-    sdf = os.path.join(get_package_share_directory(robot_name), 'model', 'model2.sdf')
+    sdf = os.path.join(get_package_share_directory(robot_name), 'model','servicebot','model.sdf')
     # print(sdf)
     # xml_object = etree.parse(sdf)
     # xml_string = etree.tostring(xml_object).decode()
-    # print(xml_string)
-    # # xml = open(urdf, 'r').read()
+    # # print(xml_string)
+    # # xml = open(sdf, 'r').read()
+    # # #
+    # xml_string = xml_string.replace('"', '\\"')
     #
-    # xml = xml.replace('"', '\\"')
-
     # swpan_args = '{name: \"my_robot\", xml: \"' + xml_string + '\" }'
 
     return LaunchDescription([
@@ -36,6 +36,10 @@ def generate_launch_description():
         #     output='screen'),
 
         ExecuteProcess(
-            cmd=['ros2','run','gazebo_ros','spawn_entity.py','-entity','our_robot','-x','0','-y','0','-z','0','-file',sdf],
+            cmd=['ros2','run','gazebo_ros','spawn_entity.py','-entity','our_robot','-x','0','-y','0','-z','0','-R','0','-P','0','-Y','0','-file',sdf],
             output='screen'),
+
+        # ExecuteProcess(
+        #     cmd=['ros2','service','call','/spawn_entity','gazebo_msgs/SpawnEntity',swpan_args],
+        #     output='screen'),
     ])
