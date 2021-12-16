@@ -10,12 +10,12 @@ import lxml.etree as etree
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    robot_name = 'robot_world'
-    world_file_name = 'world'
+    package_name = 'robot_world'
+    world_file_name = 'env_without_bot.world'
 
-    world = os.path.join(get_package_share_directory(robot_name), 'environment', world_file_name)
+    world = os.path.join(get_package_share_directory(package_name), 'environment', world_file_name)
 
-    sdf = os.path.join(get_package_share_directory(robot_name), 'model','servicebot','model.sdf')
+    sdf = os.path.join(get_package_share_directory(package_name), 'model','servicebot','model.sdf')
     # print(sdf)
     # xml_object = etree.parse(sdf)
     # xml_string = etree.tostring(xml_object).decode()
