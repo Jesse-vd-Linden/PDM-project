@@ -15,33 +15,27 @@ def generate_launch_description():
 
     world = os.path.join(get_package_share_directory(robot_name), 'environment', world_file_name)
 
-    urdf = os.path.join(get_package_share_directory(robot_name), 'model', 'model.sdf')
-
-    xml_object = etree.parse(urdf)
-    xml_string = etree.tostring(xml_object).decode()
-    # xml = open(urdf, 'r').read()
+    sdf = os.path.join(get_package_share_directory(robot_name), 'model', 'model2.sdf')
+    # print(sdf)
+    # xml_object = etree.parse(sdf)
+    # xml_string = etree.tostring(xml_object).decode()
+    # print(xml_string)
+    # # xml = open(urdf, 'r').read()
     #
     # xml = xml.replace('"', '\\"')
 
-    swpan_args = '{name: \"my_robot\", xml: \"' + xml_string + '\" }'
+    # swpan_args = '{name: \"my_robot\", xml: \"' + xml_string + '\" }'
 
     return LaunchDescription([
         ExecuteProcess(
             cmd=['gazebo', '--verbose', world, '-s', 'libgazebo_ros_factory.so'],
             output='screen'),
 
-        ExecuteProcess(
-            cmd=['ros2', 'param', 'set', '/gazebo', 'use_sim_time', use_sim_time],
-            output='screen'),
+        # ExecuteProcess(
+        #     cmd=['ros2', 'param', 'set', '/gazebo', 'use_sim_time', use_sim_time],
+        #     output='screen'),
 
         ExecuteProcess(
-            cmd=['ros2', 'run', 'gazebo_ros', 'spawn_entity.py', '-entity', 'TheArm',
-                 '-x','10',
-                 '-y','10',
-                 '-z','10',
-                 '-R','0.1',
-                 '-P','0.2',
-                 '-Y','0.3',
-                 '-database','simple_arm'],
+            cmd=['ros2','run','gazebo_ros','spawn_entity.py','-entity','our_robot','-x','0','-y','0','-z','0','-file',sdf],
             output='screen'),
     ])

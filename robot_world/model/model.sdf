@@ -268,7 +268,7 @@
         <robotNamespace>/our_robot</robotNamespace>
       </plugin>
     </gazebo>
-    
+
     <transmission name="left_wheel_trans">
       <type>transmission_interface/SimpleTransmission</type>
       <actuator name="motor1">
