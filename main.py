@@ -1,6 +1,7 @@
 from mapping.map_2d import Map
 import matplotlib.pyplot as plt
 
+
 ##Start of Planner class############
 def GetDistance(nodeA,nodeB):
     dstX = abs(nodeA[0] - nodeB[0])
@@ -38,7 +39,7 @@ def searching(grid,start,end):
         for i in range(len(open)):
             if open[i].f < current_node.f or open[i].f == current_node.f:
                 if open[i].h < current_node.h:
-                    current_node = open[i];
+                    current_node = open[i]
 
         open.remove(current_node)
         closed.append(current_node)
@@ -91,20 +92,16 @@ def freespace(list, cells):
             test = cells[i]
             Grid.setunwalkable(test)
 
-
 if __name__ == "__main__":
-    Grid = Map()
-    Grid.__init__(0.5)
+    Grid = Map(0.5)
     cellscenters = Grid.cellsCenters_
-    Grid.plotMap2d()
-    Grid.setObstacles("c",(5,3),1.1)
-    Grid.setObstacles("r",cellscenters[5],3,3)
+    Grid.setObstacle((5, 3), 1.3)
+    Grid.setObstacle((0, 0), 3, 3)
     freespace(Grid.obstacles_, cellscenters)
-    Grid.update()
-    start = (6.5,6.5)
+    start = (5,10)
     end = (5,0.5)
+    Grid.plotMap2d()
     path = searching(Grid,start,end)
-
-    print(path)
     plt.show()
+
 
