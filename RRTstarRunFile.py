@@ -5,7 +5,7 @@ Created on Wed Dec 15 15:29:02 2021
 This code has been inpired by the following references:
     - https://www.youtube.com/watch?v=TzfNzqjJ2VQ&ab_channel=Algobotics
     - Robot Dynamics & Control (RO47001); Assignment 2; Luka Peternel
-    
+    Verandering
 @author: chris
 """
 import numpy as np
