@@ -3,12 +3,13 @@ import matplotlib.pyplot as plt
 
 
 ##Start of Planner class############
-def GetDistance(nodeA,nodeB):
+def GetDistance(nodeA, nodeB):
     dstX = abs(nodeA[0] - nodeB[0])
     dstY = abs(nodeA[1] - nodeB[1])
-    if (dstX > dstY) :
-        return 14*dstY + 10* (dstX-dstY)
-    return 14*dstX + 10 * (dstY-dstX)
+    if (dstX > dstY):
+        return 14 * dstY + 10 * (dstX - dstY)
+    return 14 * dstX + 10 * (dstY - dstX)
+
 
 class Node:
     def __init__(self, parent=None, position=None):
@@ -16,15 +17,15 @@ class Node:
         self.position = position
         self.g = 0
         self.h = 0
-        self.f = self.g+self.h
-
+        self.f = self.g + self.h
 
     # def __eq__(self, other):
     #     return self.position == other.position
 
-def searching(grid,start,end):
+
+def searching(grid, start, end):
     movements = [(0, -0.5), (0, 0.5), (-0.5, 0), (0.5, 0), (-0.5, -0.5), (-0.5, 0.5), (0.5, -0.5), (0.5, 0.5)]
-    start_node = Node(None,start)
+    start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
     goal_node = Node(None, end)
     goal_node.g = goal_node.h = goal_node.f = 0
@@ -34,7 +35,7 @@ def searching(grid,start,end):
 
     open.append(start_node)
 
-    while len(open)>0:
+    while len(open) > 0:
         current_node = open[0]
         for i in range(len(open)):
             if open[i].f < current_node.f or open[i].f == current_node.f:
@@ -43,9 +44,9 @@ def searching(grid,start,end):
 
         open.remove(current_node)
         closed.append(current_node)
-        #print('while')
+        # print('while')
 
-        #check if goal is found
+        # check if goal is found
         if current_node.position == end:
             print('end found')
             path = []
@@ -59,7 +60,8 @@ def searching(grid,start,end):
         children = []
         for new_position in movements:
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
-            if node_position[0]<=0 or node_position[0]>Grid.worldx_ or node_position[1]<=0 or node_position[1]>Grid.worldy_:
+            if node_position[0] <= 0 or node_position[0] > Grid.worldXlim_ or node_position[1] <= 0 or node_position[
+                1] > Grid.worldYlim_:
                 continue
 
             if node_position not in Grid.unwalkable_:
@@ -73,8 +75,8 @@ def searching(grid,start,end):
             ##create g,h,f values
             child.g = current_node.g + 0.5
             ## herustic function used
-            child.h = GetDistance(child.position,goal_node.position)
-                #((child.position[0] - goal_node.position[0]) ** 2) + ((child.position[1] - goal_node.position[1]) ** 2)
+            child.h = GetDistance(child.position, goal_node.position)
+            # ((child.position[0] - goal_node.position[0]) ** 2) + ((child.position[1] - goal_node.position[1]) ** 2)
 
             ## check if child is in the open list already
             for open_node in open:
@@ -84,24 +86,13 @@ def searching(grid,start,end):
             open.append(child)
 
 
-def freespace(list, cells):
-    for i in range(len(list)):
-        N = list[i].contains_points(cells)
-        f = [i for i, x in enumerate(N) if x]
-        for i in f:
-            test = cells[i]
-            Grid.setunwalkable(test)
-
 if __name__ == "__main__":
-    Grid = Map(0.5)
+    Grid = Map(nodeDist=.5)
     cellscenters = Grid.cellsCenters_
-    Grid.setObstacle((5, 3), 1.3)
-    Grid.setObstacle((0, 0), 3, 3)
-    freespace(Grid.obstacles_, cellscenters)
-    start = (5,10)
-    end = (5,0.5)
+    Grid.setObstacle(centerPosition=(5, 3), radius=1.3)
+    Grid.setObstacle(centerPosition=(0, 0), radius=3)
+    start = (5, 10)
+    end = (5, 0.5)
     Grid.plotMap2d()
-    path = searching(Grid,start,end)
+    path = searching(Grid, start, end)
     plt.show()
-
-

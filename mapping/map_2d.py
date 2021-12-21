@@ -1,49 +1,46 @@
-from matplotlib import path
 import matplotlib.pyplot as plt
+from itertools import compress
+import numpy as np
+
 
 class Map:
-    def __init__(self, nodeRadius):
+    def __init__(self, nodeDist, worldStart=(0, 0), worldSize=(10, 10)):
         self.unwalkable_ = []
         self.obstacles_ = []
-        self.worldCenter_ = (0, 0)
-        self.worldx_ = self.worldCenter_[0] + 10
-        self.worldy_ = self.worldCenter_[1] + 10
-        self.nodeRadius_ = nodeRadius
-        self.nodeDiameter_ = self.nodeRadius_ * 2
-        self.gridSizeX_ = int(self.worldx_ / self.nodeRadius_)
-        self.gridSizeY_ = int(self.worldy_ / self.nodeRadius_)
-        self.bottomLeft_ = self.worldCenter_
-        self.mapEdges_ = [(self.worldCenter_), (0, self.worldy_), (self.worldx_, self.worldy_), (self.worldx_, 0)]
+        self.worldStart_ = worldStart
+        self.worldXlim_ = self.worldStart_[0] + worldSize[0]
+        self.worldYlim_ = self.worldStart_[1] + worldSize[0]
+        self.nodeDist_ = nodeDist
         self.cellsCenters_ = self.findCenters()
 
     def findCenters(self):
         cellsCenters = []
-        for i in range(self.worldx_):
-            for j in range(self.worldy_):
-                cellsCenters.append((i + self.nodeRadius_, j + self.nodeRadius_))
-                cellsCenters.append((i, j))
-                cellsCenters.append((i + self.nodeRadius_, j))
-                cellsCenters.append((i, j+self.nodeRadius_))
+        for x in np.arange(self.worldStart_[0] - self.nodeDist_ / 2, self.worldXlim_, self.nodeDist_):
+            for y in np.arange(self.worldStart_[1] - self.nodeDist_ / 2, self.worldYlim_, self.nodeDist_):
+                cellsCenters.append((x, y))
         return cellsCenters
 
-    def setObstacle(self, center, h, w=None):
-        # check for the conditions
-        r = h
-        obstacle_temp = plt.Circle((center[0], center[1]), r, fc='black')
-        obstacle = plt.Circle((center[0], center[1]), r + self.nodeRadius_, fc='black')
-        plt.gca().add_patch(obstacle_temp)
+    def setObstacle(self, centerPosition, radius, w=None):
+        # Add obstacle
+        obstacle = plt.Circle((centerPosition[0], centerPosition[1]), radius, fc='black')
         self.obstacles_.append(obstacle)
 
-    def setunwalkable(self,point):
-        self.unwalkable_.append(point)
+        # Check collision with robot
+        collision_obstacle = plt.Circle((centerPosition[0], centerPosition[1]), radius + self.nodeDist_, fc='black')
+        point_in_collision = collision_obstacle.contains_points(self.cellsCenters_).tolist()
+        self.unwalkable_ += list(compress(self.cellsCenters_, point_in_collision))
 
     def plotMap2d(self):
         # Plot cell centers
         for point in self.cellsCenters_:
             plt.scatter(point[0], point[1], color='b')
-        plt.xlim([self.bottomLeft_[0], self.worldx_])
-        plt.ylim([self.bottomLeft_[1], self.worldy_])
+        plt.xlim([self.worldStart_[0], self.worldXlim_])
+        plt.ylim([self.worldStart_[1], self.worldYlim_])
+
+        # Plot obstacles
+        for obstacle in self.obstacles_:
+            plt.gca().add_patch(obstacle)
 
         # Plot unwalkable points
         for point in self.unwalkable_:
-            plt.scatter(point[0], point[1],color="r")
+            plt.scatter(point[0], point[1], color="r")
