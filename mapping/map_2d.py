@@ -1,7 +1,10 @@
 from itertools import compress
 
+import matplotlib.animation
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from matplotlib.animation import FuncAnimation
 
 
 class Map:
@@ -67,9 +70,7 @@ class Map:
                 plt.scatter(position[0], position[1], color="g")
         plt.show()
 
-    def plotGrid3D(self):
-        fig = plt.figure()
-        ax = plt.axes(projection='3d')
+    def plotGrid3D(self,ax):
         # Plot cell centers
         for point in self.freeNodes_:
             ax.scatter3D(point[0], point[1], 0, color='b', s=1)
@@ -88,22 +89,46 @@ class Map:
         return ax
 
     def plotMap3d(self):
-        ax = self.plotGrid3D()
-        # Plot interactively if path is added to map
-        if self.foundPath_ is not None:
-            ax.plot(*zip(*self.foundPath_), color="g")
-            for position in self.foundPath_:
-                plt.draw()
-                ax.scatter3D(position[0], position[1], 0, color="g", s=1)
+        a = np.random.rand(2000, 3) * 10
+        t = np.array([np.ones(100) * i for i in range(20)]).flatten()
+        df = pd.DataFrame({"time": t, "x": a[:, 0], "y": a[:, 1], "z": a[:, 2]})
 
-                # Plot robot on path starting point
-                self.Robot_.setBasePosition(position)
-                self.plotRobot3D(ax=ax)
-                plt.pause(0.1)
-        else:
-            self.plotGrid3D()
+        def update_graph(num):
+            print(num)
+            data = df[df['time'] == num]
+            graph._offsets3d = (data.x, data.y, data.z)
+            title.set_text('3D Test, time={}'.format(num))
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        title = ax.set_title('3D Test')
+        self.plotGrid3D(ax)
+
+        data = df[df['time'] == 0]
+        graph = ax.scatter(data.x, data.y, data.z)
+
+        print("len -", len(self.foundPath_))
+        ani = matplotlib.animation.FuncAnimation(fig, update_graph, len(self.foundPath_),
+                                                 interval=1, blit=False, repeat=False)
+        # ani.save('abc.gif')
 
         plt.show()
+        # ax = self.plotGrid3D()
+        # # Plot interactively if path is added to map
+        # if self.foundPath_ is not None:
+        #     ax.plot(*zip(*self.foundPath_), color="g")
+        #     for position in self.foundPath_:
+        #         plt.draw()
+        #         ax.scatter3D(position[0], position[1], 0, color="g", s=1)
+        #
+        #         # Plot robot on path starting point
+        #         self.Robot_.setBasePosition(position)
+        #         self.plotRobot3D(ax=ax)
+        #         plt.pause(0.1)
+        # else:
+        #     self.plotGrid3D()
+        #
+        # plt.show()
 
     def plotCylinder(self, ax, center_x, center_y, radius, height_z):
         z = np.linspace(0, height_z, 50)
@@ -111,7 +136,7 @@ class Map:
         theta_grid, z_grid = np.meshgrid(theta, z)
         x_grid = radius * np.cos(theta_grid) + center_x
         y_grid = radius * np.sin(theta_grid) + center_y
-        ax.plot_surface(x_grid, y_grid, z_grid, color="grey")
+        return ax.plot_surface(x_grid, y_grid, z_grid, color="grey")
 
     def plotRobot3D(self, ax, arm_position=((0, 0, 0.5), (0, -1, 0.5)), size=(1, 1, 1)):
         x, y = self.Robot_.getBasePosition()

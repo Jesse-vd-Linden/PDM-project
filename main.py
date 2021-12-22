@@ -1,5 +1,6 @@
 from mapping.map_2d import Map
 from pathfinding.a_star import A_star
+import matplotlib; matplotlib.use("TkAgg")
 
 if __name__ == "__main__":
     Grid = Map(nodeDist=.5)
