@@ -18,8 +18,8 @@ class RRT_arm():
 
         ## Dynamics values
         self.theta = 0
-        self.phi = math.pi/2
-        self.psi = math.pi/2
+        self.phi = math.pi/1.5
+        self.psi = -math.pi/1.2
         self.prev_error = 0
         self.dt = dt
 
@@ -27,6 +27,7 @@ class RRT_arm():
         self.connecting_radius = 0.1
         self.point_list = np.empty((0,3))
         self.begin_configuration = self.position_arm()
+        self.origin = np.array([0,0,0])
         self.point_list = np.append(self.point_list, np.array([self.begin_configuration]),axis=0)
 
 ########################################################################################################
@@ -38,8 +39,7 @@ class RRT_arm():
         x = np.cos(self.theta)*(self.lower_arm_length*np.cos(self.phi)+self.upper_arm_length*np.cos(self.phi+self.psi))
         y = np.sin(self.theta)*(self.lower_arm_length*np.cos(self.phi)+self.upper_arm_length*np.cos(self.phi+self.psi))
         z = (self.height_base+self.lower_arm_length*np.sin(self.phi)+self.upper_arm_length*np.sin(self.phi+self.psi))
-        position = np.array([x,y,z])
-        return position
+        return np.array([x,y,z])
 
 
     def inverse_kinematics(self,desired_position):
@@ -105,6 +105,7 @@ class RRT_arm():
 
         N = 1000
         data = np.array(list(gen(N)))
+        print(data.shape)
         line, = ax.plot(data[0,:].flatten(), data[1,:].flatten(), data[2,:].flatten(),marker='o')
 
         # Setting the axes properties
@@ -117,7 +118,7 @@ class RRT_arm():
         ax.set_zlim3d([0, self.arm_len+0.01])
         ax.set_zlabel('Z')
 
-        ani = animation.FuncAnimation(fig, update, N, fargs=(data, line), interval=10000/N, blit=False)
+        ani2 = animation.FuncAnimation(fig, update, N, fargs=(data, line), interval=10000/N, blit=False)
         # ani.save('matplot003.gif', writer='imagemagick')
         plt.show()
 
@@ -126,7 +127,7 @@ class RRT_arm():
 #################################### RRT path generation ###############################################
 ########################################################################################################
 
-    def RRT(self):
+    def RRT(self,i):
         ## sample a random node
         x = random.uniform(-self.arm_len,self.arm_len)
         y = random.uniform(-self.arm_len,self.arm_len)
@@ -138,41 +139,54 @@ class RRT_arm():
 
         for j in range(self.point_list.shape[0]):
             difference_values = current_point - self.point_list[j,:]
-            evaluation_value = np.sqrt(abs(difference_values[0]**2)+abs(difference_values[1]**2)+abs(difference_values[2]**2))
+            evaluation_value = np.sqrt((difference_values[0]**2)+(difference_values[1]**2)+(difference_values[2]**2))
             evaluation_list = np.append(evaluation_list, evaluation_value)
         
-        evaluation_list = np.delete(evaluation_list, np.where(evaluation_list >= self.connecting_radius))
-        if evaluation_list.shape[0] == 0:
-            return np.array([self.begin_configuration,self.begin_configuration])
+        
+        evaluation_list_cut = np.delete(evaluation_list, np.where(evaluation_list >= self.connecting_radius))
+        
+        if evaluation_list_cut.shape == (0,):
+            return np.array([self.begin_configuration,self.begin_configuration]).reshape(2,3)
         else:
-            index_min = np.argmin(evaluation_list)
+            index_min = np.where(evaluation_list == min(evaluation_list_cut))
             closest_point = self.point_list[index_min]
             self.point_list = np.append(self.point_list,np.array([current_point]),axis=0)
-
-            return np.array([closest_point,current_point])
+            return np.array([closest_point[0],current_point])
     
     def RRT_plot(self,amount_nodes):
-        fig = plt.figure()
-        ax_rrt = fig.add_subplot(projection='3d')            
+        fig2 = plt.figure()
+        ax_rrt = fig2.add_subplot(projection='3d')            
         
         def gen(n):
             for i in range(n):
-                yield self.RRT()
+                yield self.RRT(i)
 
-        def update(num, data, line):
-            if (data[:num,:,0:2].shape == (2,1)) and (data[:num,:,2].shape == (1,1)):
-                line.set_data(data[:num,:,0:2])
-                line.set_3d_properties(data[:num,:,2])
-            else:   
-                line.set_data(np.array([self.begin_configuration[0],self.begin_configuration[1]]))
-                line.set_3d_properties(np.array([self.begin_configuration[2]]))
+        def init_func():
+            point.set_data(np.array([[self.begin_configuration[0],self.begin_configuration[1]],[self.begin_configuration[0],self.begin_configuration[1]]]))
+            point.set_3d_properties(np.array([[self.begin_configuration[2]],[self.begin_configuration[2]]]))
+
+        def update(num, data, point):
+            if (data[:(num+1),:,:2]).shape == (1,2,2):
+                point.set_data(np.squeeze(data[:(num+1),:,:2]))
+                point.set_3d_properties(np.squeeze(data[:(num+1),:,2]))
+            else:
+                print((data[:(num+1),:,:2]).flatten().shape)
+                print((data[:(num+1),:,2]).flatten().shape)
+                point.set_data((data[:(num+1),:,:2]).flatten())
+                point.set_3d_properties((data[:(num+1),:,2]).flatten())
                          
-
-        data = np.array(list(gen(amount_nodes))).T
+        data = np.array(list(gen(amount_nodes)))
         print(data.shape)
-        print(data[:20,:,0:2])
-        print(data[:20,:,2])
-        line, = ax_rrt.plot(data[0,:].flatten(), data[1,:].flatten(), data[2,:].flatten(),marker='o')
+
+        ### Beginning position plotting
+        x_init = np.array([self.begin_configuration[0],self.begin_configuration[0]+0.01])
+        y_init = np.array([self.begin_configuration[1],self.begin_configuration[1]+0.01])
+        z_init = np.array([self.begin_configuration[2],self.begin_configuration[2]+0.01])
+        ax_rrt.plot(x_init,y_init,z_init,marker='o',linewidth=5,color='blue')
+
+        ## plotting RRT (STATIC)
+        for i in range(data.shape[0]):
+            point, = ax_rrt.plot((data[i,:,0].flatten()), (data[i,:,1].flatten()), (data[i,:,2].flatten()),linewidth=1,marker='o',color='red')
        
         # Setting the axes properties
         ax_rrt.set_xlim3d([-(self.arm_len+0.01), self.arm_len+0.01])
@@ -184,7 +198,7 @@ class RRT_arm():
         ax_rrt.set_zlim3d([0, self.arm_len+0.01])
         ax_rrt.set_zlabel('Z')
 
-        ani = animation.FuncAnimation(fig, update, amount_nodes, fargs=(data,line), interval=10/amount_nodes, blit=False)
+        # ani1 = animation.FuncAnimation(fig2, update, amount_nodes, fargs=(data,point), init_func=init_func, interval=1000, blit=False) ## interval=1000ms
         # ani.save('matplot001.gif', writer='imagemagick')
         plt.show()
 
@@ -202,10 +216,10 @@ def main():
 
     desired_position = np.array([0.3,0.3,0.1])
 
-    amount_nodes = 1000
+    amount_nodes = 3000
     rrt_arm.RRT_plot(amount_nodes)
 
-    rrt_arm.simulation_arm_control(desired_position)
+    # rrt_arm.simulation_arm_control(desired_position)s
 
 
 if __name__ == '__main__':
