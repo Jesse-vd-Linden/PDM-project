@@ -60,7 +60,7 @@ class RRT_arm():
         J = np.array([[J11,J12,J13],[J21,J22,J23],[J31,J32,J33]])
         current_position = self.position_arm()
         error = desired_position - current_position
-        Kp = 1
+        Kp = 2
         Kd = 0.1
         derivative_error = (error-self.prev_error)/self.dt
         x_dot = Kp*error+Kd*derivative_error
@@ -69,12 +69,7 @@ class RRT_arm():
         return q_dot
 
 
-    def draw_arm(self, desired_position):
-        q_dot = self.inverse_kinematics(desired_position)
-        self.theta += q_dot[0]*self.dt
-        self.phi += q_dot[1]*self.dt
-        self.psi += q_dot[2]*self.dt
-
+    def draw_arm(self):
         x1 = np.cos(self.theta)*(self.lower_arm_length*np.cos(self.phi))
         y1 = np.sin(self.theta)*(self.lower_arm_length*np.cos(self.phi))
         z1 = (self.height_base+self.lower_arm_length*np.sin(self.phi))
@@ -97,7 +92,12 @@ class RRT_arm():
 
         def gen(n):
             for i in range(n):
-                yield np.array(self.draw_arm(desired_position)).T
+                q_dot = self.inverse_kinematics(desired_position)
+                self.theta += q_dot[0]*self.dt
+                self.phi += q_dot[1]*self.dt
+                self.psi += q_dot[2]*self.dt
+
+                yield np.array(self.draw_arm()).T
 
         def update(num, data, line):
             line.set_data(data[num,0:2,:])
@@ -105,7 +105,9 @@ class RRT_arm():
 
         N = 1000
         data = np.array(list(gen(N)))
-        print(data.shape)
+        print(data[0,:].flatten().shape)
+        print(data[1,:].flatten().shape)
+        print(data[2,:].flatten().shape)
         line, = ax.plot(data[0,:].flatten(), data[1,:].flatten(), data[2,:].flatten(),marker='o')
 
         # Setting the axes properties
@@ -127,7 +129,7 @@ class RRT_arm():
 #################################### RRT path generation ###############################################
 ########################################################################################################
 
-    def RRT(self,i):
+    def RRT(self,i,goal):
         ## sample a random node
         x = random.uniform(-self.arm_len,self.arm_len)
         y = random.uniform(-self.arm_len,self.arm_len)
@@ -137,29 +139,51 @@ class RRT_arm():
         current_point = np.array([x,y,z])
         evaluation_list = np.array([])
 
+        # Check the distance to all existing nodes
         for j in range(self.point_list.shape[0]):
             difference_values = current_point - self.point_list[j,:]
             evaluation_value = np.sqrt((difference_values[0]**2)+(difference_values[1]**2)+(difference_values[2]**2))
             evaluation_list = np.append(evaluation_list, evaluation_value)
         
-        
+        ## Delete nodes out of radius
         evaluation_list_cut = np.delete(evaluation_list, np.where(evaluation_list >= self.connecting_radius))
         
-        if evaluation_list_cut.shape == (0,):
+
+        if evaluation_list_cut.shape == (0,): ## If no nodes in radius of sample, return nothing
             return np.array([self.begin_configuration,self.begin_configuration]).reshape(2,3)
         else:
             index_min = np.where(evaluation_list == min(evaluation_list_cut))
             closest_point = self.point_list[index_min]
-            self.point_list = np.append(self.point_list,np.array([current_point]),axis=0)
-            return np.array([closest_point[0],current_point])
+            if self.obstacle_detection(closest_point,current_point) == True:
+                if np.sqrt(((current_point-goal)**2).sum(-1)) <= self.connecting_radius:
+                    print('Found the goal!')
+                    self.point_list = np.append(self.point_list,np.array([current_point]),axis=0)
+                    return np.array([current_point,goal])
+                else:
+                    self.point_list = np.append(self.point_list,np.array([current_point]),axis=0)
+                    return np.array([closest_point[0],current_point])
+            else:
+                return np.array([self.begin_configuration,self.begin_configuration]).reshape(2,3)
+
+    def obstacle_detection(self,begin_point,end_point):
+        
+        return 0 #ORTrue, False 
+
+
+    def find_path(self, data):
+        self.point_list
+
+        
+        path = 0 ## shortest route from start to goal with given data points
+        return path
     
-    def RRT_plot(self,amount_nodes):
+    def RRT_plot(self,amount_nodes,goal):
         fig2 = plt.figure()
         ax_rrt = fig2.add_subplot(projection='3d')            
         
         def gen(n):
             for i in range(n):
-                yield self.RRT(i)
+                yield self.RRT(i,goal)
 
         def init_func():
             point.set_data(np.array([[self.begin_configuration[0],self.begin_configuration[1]],[self.begin_configuration[0],self.begin_configuration[1]]]))
@@ -176,17 +200,23 @@ class RRT_arm():
                 point.set_3d_properties((data[:(num+1),:,2]).flatten())
                          
         data = np.array(list(gen(amount_nodes)))
+        print(self.point_list.shape)
+        path = self.find_path(data)
         print(data.shape)
 
         ### Beginning position plotting
-        x_init = np.array([self.begin_configuration[0],self.begin_configuration[0]+0.01])
-        y_init = np.array([self.begin_configuration[1],self.begin_configuration[1]+0.01])
-        z_init = np.array([self.begin_configuration[2],self.begin_configuration[2]+0.01])
-        ax_rrt.plot(x_init,y_init,z_init,marker='o',linewidth=5,color='blue')
+        x_init = np.array([self.begin_configuration[0]])
+        y_init = np.array([self.begin_configuration[1]])
+        z_init = np.array([self.begin_configuration[2]])
+        ax_rrt.scatter(x_init,y_init,z_init,marker='o',s=50,color='blue')
+        ax_rrt.scatter(goal[0],goal[1],goal[2],marker='o',s=50,color='green')
+        arm_still = self.draw_arm()
+        ax_rrt.plot(arm_still[:,0], arm_still[:,1], arm_still[:,2],linewidth=3,marker='o')
 
         ## plotting RRT (STATIC)
+        print(data[:,:,0].shape)
         for i in range(data.shape[0]):
-            point, = ax_rrt.plot((data[i,:,0].flatten()), (data[i,:,1].flatten()), (data[i,:,2].flatten()),linewidth=1,marker='o',color='red')
+            ax_rrt.plot((data[i,:,0].flatten()), (data[i,:,1].flatten()), (data[i,:,2].flatten()),linewidth=1,color='red')
        
         # Setting the axes properties
         ax_rrt.set_xlim3d([-(self.arm_len+0.01), self.arm_len+0.01])
@@ -217,9 +247,9 @@ def main():
     desired_position = np.array([0.3,0.3,0.1])
 
     amount_nodes = 3000
-    rrt_arm.RRT_plot(amount_nodes)
+    rrt_arm.RRT_plot(amount_nodes,desired_position)
 
-    # rrt_arm.simulation_arm_control(desired_position)s
+    # rrt_arm.simulation_arm_control(desired_position)
 
 
 if __name__ == '__main__':
