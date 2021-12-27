@@ -24,7 +24,7 @@ class RRT_arm():
         self.dt = dt
 
         ## RRT values
-        self.connecting_radius = 0.1
+        self.connecting_radius = 0.12
         self.point_list = np.empty((0,3))
         self.line_list = np.empty((0,2,3))
         self.begin_configuration = self.position_arm()
@@ -90,12 +90,20 @@ class RRT_arm():
         arm_configuration = np.array([[0,0,0],base_link,lower_link,upper_link])
         return arm_configuration
 
-    def simulation_arm_control(self,desired_position):
+    def simulation_arm_control(self):
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
 
-        def gen(n):
+    
+        path = self.find_path()
+        ax.plot(path[:,0],path[:,1],path[:,2],linewidth=2,color='blue')
+
+
+        def gen(n,path):
             for i in range(n):
+                idx = int((1-i/n)*path.shape[0])-1
+                print(idx)
+                desired_position = path[idx,:]
                 q_dot = self.inverse_kinematics(desired_position)
                 self.theta += q_dot[0]*self.dt
                 self.phi += q_dot[1]*self.dt
@@ -108,7 +116,7 @@ class RRT_arm():
             line.set_3d_properties(data[num,2,:])
 
         N = 1000
-        data = np.array(list(gen(N)))
+        data = np.array(list(gen(N,path)))
         print(data[0,:].flatten().shape)
         print(data[1,:].flatten().shape)
         print(data[2,:].flatten().shape)
@@ -125,7 +133,7 @@ class RRT_arm():
         ax.set_zlabel('Z')
 
         ani2 = animation.FuncAnimation(fig, update, N, fargs=(data, line), interval=10000/N, blit=False)
-        # ani.save('matplot003.gif', writer='imagemagick')
+        ani2.save('matplot003.gif', writer='imagemagick')
         plt.show()
 
 
@@ -222,7 +230,6 @@ class RRT_arm():
 
         _ = np.array(list(gen(amount_nodes)))
         data = self.line_list
-        print(data.shape)
 
         def init_func(point):
             point.set_data(np.array([[self.begin_configuration[0],self.begin_configuration[1]],[self.begin_configuration[0],self.begin_configuration[1]]]))
@@ -253,7 +260,6 @@ class RRT_arm():
         
         ## FInding and printing the shortest path between the start and goal
         path = self.find_path()
-        print(path[:,1])
         ax_rrt.plot(path[:,0],path[:,1],path[:,2],linewidth=3,color='blue')
 
 
@@ -285,10 +291,10 @@ def main():
 
     
 
-    amount_nodes = 3000
+    amount_nodes = 2500
     rrt_arm.RRT_plot(amount_nodes)
 
-    # rrt_arm.simulation_arm_control(desired_position)
+    rrt_arm.simulation_arm_control()
 
 
 if __name__ == '__main__':
