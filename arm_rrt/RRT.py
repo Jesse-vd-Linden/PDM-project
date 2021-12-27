@@ -6,6 +6,7 @@ import matplotlib.animation
 import math
 import pandas as pd
 import random
+from tqdm import tqdm
 
 class RRT_arm():
 
@@ -24,7 +25,7 @@ class RRT_arm():
         self.dt = dt
 
         ## RRT values
-        self.connecting_radius = 0.12
+        self.connecting_radius = 0.1
         self.point_list = np.empty((0,3))
         self.line_list = np.empty((0,2,3))
         self.begin_configuration = self.position_arm()
@@ -64,8 +65,8 @@ class RRT_arm():
         J = np.array([[J11,J12,J13],[J21,J22,J23],[J31,J32,J33]])
         current_position = self.position_arm()
         error = desired_position - current_position
-        Kp = 5
-        Kd = 0.5
+        Kp = 4
+        Kd = 0.25
         derivative_error = (error-self.prev_error)/self.dt
         x_dot = Kp*error+Kd*derivative_error
         q_dot = np.dot(np.linalg.inv(J),x_dot)
@@ -102,7 +103,6 @@ class RRT_arm():
         def gen(n,path):
             for i in range(n):
                 idx = int((1-i/n)*path.shape[0])-1
-                print(idx)
                 desired_position = path[idx,:]
                 q_dot = self.inverse_kinematics(desired_position)
                 self.theta += q_dot[0]*self.dt
@@ -117,9 +117,6 @@ class RRT_arm():
 
         N = 1000
         data = np.array(list(gen(N,path)))
-        print(data[0,:].flatten().shape)
-        print(data[1,:].flatten().shape)
-        print(data[2,:].flatten().shape)
         line, = ax.plot(data[0,:].flatten(), data[1,:].flatten(), data[2,:].flatten(),marker='o')
 
         # Setting the axes properties
@@ -186,6 +183,38 @@ class RRT_arm():
         
         return True #ORTrue, False 
 
+
+    def obstacle_configuration_map(self):
+        fig3 = plt.figure()
+        ax_obs = fig3.add_subplot(projection='3d')        
+
+        steps = 20
+        for i in tqdm(range(steps)):
+            theta_pos = ((i-steps/2)/steps)*2*math.pi
+            for j in range(steps):
+                phi_pos = ((j-steps/2)/steps)*2*math.pi
+                for k in range(steps):
+                    psi_pos = ((k-steps/2)/steps)*2*math.pi
+                    if self.check_configuration(theta_pos, phi_pos, psi_pos):
+                        ax_obs.scatter(theta_pos,phi_pos,psi_pos,s=5,color='black')
+
+        ax_obs.set_xlabel('Theta')
+        ax_obs.set_ylabel('Phi')
+        ax_obs.set_zlabel('Psi')
+        
+        plt.show()
+
+    def check_configuration(self,theta_pos,psi_pos,phi_pos):
+        self.theta = theta_pos
+        self.psi = psi_pos
+        self.phi = phi_pos
+        arm_config = self.draw_arm()
+        if (arm_config < -0.01).any():
+            return False
+        elif 1 != 1: ## Self.obstacle_detection
+            return False
+        else:
+            return True
 
     def find_path(self):
         goal_index = []
@@ -291,10 +320,12 @@ def main():
 
     
 
-    amount_nodes = 3000
+    amount_nodes = 3500
     rrt_arm.RRT_plot(amount_nodes)
 
     rrt_arm.simulation_arm_control()
+
+    rrt_arm.obstacle_configuration_map()
 
 
 if __name__ == '__main__':
