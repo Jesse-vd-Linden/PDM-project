@@ -26,9 +26,13 @@ class RRT_arm():
         ## RRT values
         self.connecting_radius = 0.1
         self.point_list = np.empty((0,3))
+        self.line_list = np.empty((0,2,3))
         self.begin_configuration = self.position_arm()
         self.origin = np.array([0,0,0])
         self.point_list = np.append(self.point_list, np.array([self.begin_configuration]),axis=0)
+        self.path = np.empty((0,3))
+        self.empty_point = np.array([self.begin_configuration,self.begin_configuration]).reshape(2,3)
+        self.goal = np.array([0.3,0.3,0.1])
 
 ########################################################################################################
 #################################### DYNAMICS AND ARM ##################################################
@@ -129,7 +133,7 @@ class RRT_arm():
 #################################### RRT path generation ###############################################
 ########################################################################################################
 
-    def RRT(self,i,goal):
+    def RRT(self,i):
         ## sample a random node
         x = random.uniform(-self.arm_len,self.arm_len)
         y = random.uniform(-self.arm_len,self.arm_len)
@@ -150,42 +154,77 @@ class RRT_arm():
         
 
         if evaluation_list_cut.shape == (0,): ## If no nodes in radius of sample, return nothing
-            return np.array([self.begin_configuration,self.begin_configuration]).reshape(2,3)
+            # self.line_list = np.append(self.line_list, np.array([self.empty_point]), axis=0)
+            return
         else:
             index_min = np.where(evaluation_list == min(evaluation_list_cut))
             closest_point = self.point_list[index_min]
             if self.obstacle_detection(closest_point,current_point) == True:
-                if np.sqrt(((current_point-goal)**2).sum(-1)) <= self.connecting_radius:
+                if np.sqrt(((current_point-self.goal)**2).sum(-1)) <= self.connecting_radius:
                     print('Found the goal!')
                     self.point_list = np.append(self.point_list,np.array([current_point]),axis=0)
-                    return np.array([current_point,goal])
+                    self.line_list = np.append(self.line_list, np.array([[current_point,self.goal]]), axis=0)
+                    self.line_list = np.append(self.line_list, np.array([[closest_point[0],current_point]]), axis=0)
+                    return 
                 else:
                     self.point_list = np.append(self.point_list,np.array([current_point]),axis=0)
-                    return np.array([closest_point[0],current_point])
+                    self.line_list = np.append(self.line_list, np.array([[closest_point[0],current_point]]), axis=0)
+                    return
             else:
-                return np.array([self.begin_configuration,self.begin_configuration]).reshape(2,3)
+                # self.line_list = np.append(self.line_list, np.array([self.empty_point]), axis=0)
+                return
 
     def obstacle_detection(self,begin_point,end_point):
         
-        return 0 #ORTrue, False 
+        return True #ORTrue, False 
 
 
-    def find_path(self, data):
-        self.point_list
+    def find_path(self):
+        goal_index = []
+        for i in range(self.line_list.shape[0]):
+            if ((self.line_list[i,1,:] == self.goal).all()):
+                goal_index.append(i)
 
-        
-        path = 0 ## shortest route from start to goal with given data points
-        return path
+
+        cost_list =[]
+        for i in goal_index:
+            path_list_temp = np.array([self.goal])
+            index = i
+            while (path_list_temp[-1,:] != self.begin_configuration).all():
+                last_point = self.line_list[index,0,:]
+                path_list_temp = np.append(path_list_temp, np.array([last_point]),axis=0)
+                for j in range(self.line_list.shape[0]):
+                    if ((self.line_list[j,1,:] == self.line_list[index,0,:]).all()):
+                        index = j
+            path_cost = 0
+            for i in range(path_list_temp.shape[0]-1):
+                path_cost += np.sqrt(((path_list_temp[i,:]-path_list_temp[i+1,:])**2).sum(-1))
+            cost_list.append(path_cost)
     
-    def RRT_plot(self,amount_nodes,goal):
+        path_list = np.array([self.goal])
+        index = goal_index[np.where(cost_list == min(cost_list))[0][0]]
+        while (path_list[-1,:] != self.begin_configuration).all():
+            last_point = self.line_list[index,0,:]
+            path_list = np.append(path_list_temp, np.array([last_point]),axis=0)
+            for j in range(self.line_list.shape[0]):
+                if ((self.line_list[j,1,:] == self.line_list[index,0,:]).all()):
+                    index = j
+
+        return path_list
+    
+    def RRT_plot(self,amount_nodes):
         fig2 = plt.figure()
         ax_rrt = fig2.add_subplot(projection='3d')            
         
         def gen(n):
             for i in range(n):
-                yield self.RRT(i,goal)
+                yield self.RRT(i)
 
-        def init_func():
+        _ = np.array(list(gen(amount_nodes)))
+        data = self.line_list
+        print(data.shape)
+
+        def init_func(point):
             point.set_data(np.array([[self.begin_configuration[0],self.begin_configuration[1]],[self.begin_configuration[0],self.begin_configuration[1]]]))
             point.set_3d_properties(np.array([[self.begin_configuration[2]],[self.begin_configuration[2]]]))
 
@@ -194,30 +233,30 @@ class RRT_arm():
                 point.set_data(np.squeeze(data[:(num+1),:,:2]))
                 point.set_3d_properties(np.squeeze(data[:(num+1),:,2]))
             else:
-                print((data[:(num+1),:,:2]).flatten().shape)
-                print((data[:(num+1),:,2]).flatten().shape)
-                point.set_data((data[:(num+1),:,:2]).flatten())
-                point.set_3d_properties((data[:(num+1),:,2]).flatten())
+                point.set_data(np.squeeze(data[:(num+1),:,:2]))
+                point.set_3d_properties(np.squeeze(data[:(num+1),:,2]))
                          
-        data = np.array(list(gen(amount_nodes)))
-        print(self.point_list.shape)
-        path = self.find_path(data)
-        print(data.shape)
-
+      
         ### Beginning position plotting
         x_init = np.array([self.begin_configuration[0]])
         y_init = np.array([self.begin_configuration[1]])
         z_init = np.array([self.begin_configuration[2]])
         ax_rrt.scatter(x_init,y_init,z_init,marker='o',s=50,color='blue')
-        ax_rrt.scatter(goal[0],goal[1],goal[2],marker='o',s=50,color='green')
+        ax_rrt.scatter(self.goal[0],self.goal[1],self.goal[2],marker='o',s=50,color='green')
         arm_still = self.draw_arm()
         ax_rrt.plot(arm_still[:,0], arm_still[:,1], arm_still[:,2],linewidth=3,marker='o')
 
         ## plotting RRT (STATIC)
-        print(data[:,:,0].shape)
         for i in range(data.shape[0]):
-            ax_rrt.plot((data[i,:,0].flatten()), (data[i,:,1].flatten()), (data[i,:,2].flatten()),linewidth=1,color='red')
-       
+            ax_rrt.plot((data[i,:,0].flatten()), (data[i,:,1].flatten()), (data[i,:,2].flatten()),marker='.',linewidth=1,color='red')
+        # point, = ax_rrt.plot((data[:,:,0].flatten()), (data[:,:,1].flatten()), (data[:,:,2].flatten()),linewidth=1,color='red')
+        
+        ## FInding and printing the shortest path between the start and goal
+        path = self.find_path()
+        print(path[:,1])
+        ax_rrt.plot(path[:,0],path[:,1],path[:,2],linewidth=3,color='blue')
+
+
         # Setting the axes properties
         ax_rrt.set_xlim3d([-(self.arm_len+0.01), self.arm_len+0.01])
         ax_rrt.set_xlabel('X')
@@ -228,7 +267,7 @@ class RRT_arm():
         ax_rrt.set_zlim3d([0, self.arm_len+0.01])
         ax_rrt.set_zlabel('Z')
 
-        # ani1 = animation.FuncAnimation(fig2, update, amount_nodes, fargs=(data,point), init_func=init_func, interval=1000, blit=False) ## interval=1000ms
+        # ani1 = animation.FuncAnimation(fig2, update, amount_nodes, fargs=(data,point), interval=1000, blit=False) ## interval=1000ms
         # ani.save('matplot001.gif', writer='imagemagick')
         plt.show()
 
@@ -244,10 +283,10 @@ def main():
     rrt_arm = RRT_arm(lower, upper, height,dt)
 
 
-    desired_position = np.array([0.3,0.3,0.1])
+    
 
     amount_nodes = 3000
-    rrt_arm.RRT_plot(amount_nodes,desired_position)
+    rrt_arm.RRT_plot(amount_nodes)
 
     # rrt_arm.simulation_arm_control(desired_position)
 
