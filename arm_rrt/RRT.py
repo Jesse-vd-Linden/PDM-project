@@ -64,8 +64,8 @@ class RRT_arm():
         J = np.array([[J11,J12,J13],[J21,J22,J23],[J31,J32,J33]])
         current_position = self.position_arm()
         error = desired_position - current_position
-        Kp = 2
-        Kd = 0.1
+        Kp = 5
+        Kd = 0.5
         derivative_error = (error-self.prev_error)/self.dt
         x_dot = Kp*error+Kd*derivative_error
         q_dot = np.dot(np.linalg.inv(J),x_dot)
@@ -133,7 +133,7 @@ class RRT_arm():
         ax.set_zlabel('Z')
 
         ani2 = animation.FuncAnimation(fig, update, N, fargs=(data, line), interval=10000/N, blit=False)
-        ani2.save('matplot003.gif', writer='imagemagick')
+        # ani2.save('matplot003.gif', writer='imagemagick')
         plt.show()
 
 
@@ -255,7 +255,7 @@ class RRT_arm():
 
         ## plotting RRT (STATIC)
         for i in range(data.shape[0]):
-            ax_rrt.plot((data[i,:,0].flatten()), (data[i,:,1].flatten()), (data[i,:,2].flatten()),marker='.',linewidth=1,color='red')
+            ax_rrt.plot((data[i,:,0].flatten()), (data[i,:,1].flatten()), (data[i,:,2].flatten()),linewidth=1,color='red')
         # point, = ax_rrt.plot((data[:,:,0].flatten()), (data[:,:,1].flatten()), (data[:,:,2].flatten()),linewidth=1,color='red')
         
         ## FInding and printing the shortest path between the start and goal
@@ -291,7 +291,7 @@ def main():
 
     
 
-    amount_nodes = 2500
+    amount_nodes = 3000
     rrt_arm.RRT_plot(amount_nodes)
 
     rrt_arm.simulation_arm_control()
