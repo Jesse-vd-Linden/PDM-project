@@ -6,3 +6,7 @@ lib64
 pyvenv.cfg
 
 pathfinding/__pycache__/
+
+*.pyc
+
+.idea/

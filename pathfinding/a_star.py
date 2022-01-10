@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import distance
 
+# A* slightlty inspired by Sebastian League https://github.com/SebLague/Pathfinding
 
 class A_star:
     def __init__(self, Map):
