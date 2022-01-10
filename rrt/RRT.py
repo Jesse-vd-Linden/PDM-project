@@ -42,7 +42,6 @@ class RRT_arm():
         self.goal = np.array([self.x_goal, self.y_goal, self.z_goal]) + self.translation
 
         self.scaling_factor = 10
-        self.path_found = True
 
     ########################################################################################################
     #################################### DYNAMICS AND ARM ##################################################
@@ -106,11 +105,10 @@ class RRT_arm():
         arm_configuration = np.array([self.translation, base_link, lower_link, upper_link])
         return arm_configuration
 
-    def simulation_arm_control(self):
+    def simulate_arm_control(self, path, save_animation=False):
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
 
-        path = self.find_path()
         ax.plot(path[:, 0], path[:, 1], path[:, 2], linewidth=2, color='blue')
         ax.voxels(self.x_obs, self.y_obs, self.z_obs, self.data_obstacles, facecolors=[1, 0, 0, 0.1], edgecolors='grey')
         ax.scatter(self.goal[0], self.goal[1], self.goal[2], marker='o', s=50, color='green')
@@ -144,9 +142,10 @@ class RRT_arm():
         ax.set_zlim3d([0, self.arm_len + 0.01])
         ax.set_zlabel('Z')
         ax.view_init(elev=45., azim=100)
-
+        plt.title('Robot manipulator control')
         ani2 = animation.FuncAnimation(fig, update, N, fargs=(data, line), interval=1000 / N, blit=False)
-        # ani2.save('Dynamics.gif', writer='imagemagick')
+        if save_animation:
+            ani2.save('Dynamics.gif', writer='imagemagick')
         plt.show()
 
     ########################################################################################################
@@ -182,7 +181,7 @@ class RRT_arm():
             if self.collides_with_obstacle(closest_point.flatten(), current_point) == True:
                 # check for connecting distance to the goal
                 if np.sqrt(((current_point - self.goal) ** 2).sum(-1)) <= self.connecting_radius:
-                    print('Found the goal!')
+                    print('Found connection to goal!')
                     self.point_list = np.append(self.point_list, np.array([current_point]), axis=0)
                     self.line_list = np.append(self.line_list, np.array([[current_point, self.goal]]), axis=0)
                     self.line_list = np.append(self.line_list, np.array([[closest_point[0], current_point]]), axis=0)
@@ -275,7 +274,7 @@ class RRT_arm():
                             and y >= limits[i][1] - safety_factor and y <= limits[i + 1][1] + safety_factor \
                             and z >= limits[i][2] - safety_factor and z <= limits[i + 1][2] + safety_factor
 
-                if (collision):
+                if collision:
                     return False
             # since the limits are given in pairs for each obstacle (upper limits and lower limits) we jump two
             i += 2
@@ -283,9 +282,9 @@ class RRT_arm():
         return True
 
     def world_set(self):
-        data_x = int((self.arm_len) * self.scaling_factor) * 2
-        data_y = int((self.arm_len) * self.scaling_factor) * 2
-        data_z = int((self.arm_len) * self.scaling_factor)
+        data_x = int(self.arm_len * self.scaling_factor) * 2
+        data_y = int(self.arm_len * self.scaling_factor) * 2
+        data_z = int(self.arm_len * self.scaling_factor)
         axes = [data_x, data_y, data_z]
         # Create Data
         data = np.ones(axes)
@@ -336,7 +335,7 @@ class RRT_arm():
             limits.append((obx / self.scaling_factor, oby / self.scaling_factor, obz / self.scaling_factor))
             limits.append(
                 ((obx + 1) / self.scaling_factor, (oby + 1) / self.scaling_factor, (obz + 1) / self.scaling_factor))
-            # limits are 3 tulips list each two elements after each other correspond to the edges of one obstacle
+            # limits are 3 tuples list each two elements after each other correspond to the edges of one obstacle
             # eg, for 1 obstacle limits will have length of 2 elements each is a 3 element tulip
 
         ## voxels draw the set elements of data as true into cubes in the world
@@ -345,12 +344,13 @@ class RRT_arm():
         ## return the list of limits
         return x, y, z, data
 
-    def obstacle_configuration_map(self):
+    def map_manipulator_collisions(self):
         fig3 = plt.figure()
         ax_obs = fig3.add_subplot(projection='3d')
 
         steps = 20
         dataset = np.zeros((steps, steps, steps), dtype=bool)
+        tqdm.write("Calculating obstacles in collision")
         for i in tqdm(range(steps)):
             theta_pos = (i / steps) * 2 * math.pi
             for j in range(steps):
@@ -363,43 +363,21 @@ class RRT_arm():
         theta_vox, phi_vox, psi_vox = np.indices(
             (dataset.shape[0] + 1, dataset.shape[1] + 1, dataset.shape[2] + 1)) * math.pi / steps
         ax_obs.voxels(theta_vox, phi_vox, psi_vox, dataset, facecolors=[1, 0, 0, 0.5], edgecolors=[0.1, 0.1, 0.1, 0.01])
-
-        # dataset_invert = np.invert(dataset)
-        # ax_obs.voxels(theta_vox, phi_vox, psi_vox, dataset_invert, facecolors=[0, 1, 0, 0.05], edgecolors=[0.1,0.1,0.1,0.1])
-
-        # goal_angles = self.config_based_on_position
-        # ax_obs.scatter(goal_angles[0],goal_angles[1],goal_angles[2],marker='o',s=50,color='blue', label='start')
-
         ax_obs.scatter(self.start_config[0], self.start_config[1], self.start_config[2], marker='o', s=50, color='blue',
                        label='start')
 
         ax_obs.set_xlabel('Theta')
         ax_obs.set_ylabel('Phi')
         ax_obs.set_zlabel('Psi')
-
+        plt.title('Collisions (red) for robot manipulator arm angles')
         plt.show()
-
-    def config_based_on_position(self):
-        #### try to reverse this proces, get angles from position
-        ## Howevere always two configuration for the robot arm are possible  making it practically unable to solve favorable all the time
-        x = np.cos(self.theta) * (
-                self.lower_arm_length * np.cos(self.phi) + self.upper_arm_length * np.cos(self.phi + self.psi)) + \
-            self.translation[0]
-        y = np.sin(self.theta) * (
-                self.lower_arm_length * np.cos(self.phi) + self.upper_arm_length * np.cos(self.phi + self.psi)) + \
-            self.translation[1]
-        z = (self.height_base + self.lower_arm_length * np.sin(self.phi) + self.upper_arm_length * np.sin(
-            self.phi + self.psi)) + self.translation[2]
-
-        # theta, phi, psi = solve(x,y,z)
-        return  # [theta, phi, psi]
 
     def check_collision(self, theta_pos, psi_pos, phi_pos):
         self.theta = theta_pos
         self.psi = psi_pos
         self.phi = phi_pos
         arm_config = self.draw_arm()
-        if (arm_config[:, 2] < -0.01).any(): # Check if the arm collides with the floor
+        if (arm_config[:, 2] < -0.01).any():  # Check if the arm collides with the floor
             return True
         elif self.collides_with_obstacle(arm_config[0], arm_config[1]) == False:  # Base obstacle_detection
             return True
@@ -446,7 +424,8 @@ class RRT_arm():
 
         return path
 
-    def RRT_plot(self, amount_nodes, amount_obstacles, animate_plot=True, save_animation=False, method='RRT'):
+    def find_path_and_plot_manipulator(self, amount_nodes, amount_obstacles, animate_plot=True, save_animation=False,
+                                       method='RRT'):
         fig2 = plt.figure()
         ax_rrt = fig2.add_subplot(projection='3d')
 
@@ -500,9 +479,10 @@ class RRT_arm():
                 ani1.save('path_planning.gif', writer='imagemagick')  ### Save the animation of the gif
         plt.show()
 
-        path = self.find_path() # Find a path from RRT nodes
-        if path.any():
+        path = self.find_path()  # Find a path from RRT nodes
+        if not isinstance(path, type(None)):
             self.plot_path_3d(data, path)
+        return path
 
     def plot_path_3d(self, data, path, animate_path=True):
         fig4 = plt.figure()

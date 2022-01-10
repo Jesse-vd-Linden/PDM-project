@@ -21,9 +21,9 @@ if __name__ == "__main__":
     # RRT manipulator path planning
     print("Starting RRT mobile manipulator planner")
     robot_arm = RRT_arm(lower_arm_length=0.3, upper_arm_length=0.3, height_base=0.1)
-    path_found = robot_arm.RRT_plot(amount_nodes=6000, amount_obstacles=4)
+    found_path = robot_arm.find_path_and_plot_manipulator(amount_nodes=6000, amount_obstacles=4)
 
-    if path_found:
-        robot_arm.simulation_arm_control()
+    if not isinstance(found_path, type(None)):
+        robot_arm.simulate_arm_control(found_path)
 
-    robot_arm.obstacle_configuration_map()
+    robot_arm.map_manipulator_collisions()
