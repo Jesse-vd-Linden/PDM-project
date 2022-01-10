@@ -58,7 +58,7 @@ class Map:
 
         # Plot unwalkable points
         for point in self.obstructedNodes_:
-            plt.scatter(point[0], point[1], color="r")
+            plt.scatter(point[0], point[1], color="red")
 
         # Plot path if path is added to map
         if self.foundPath_ is not None:
