@@ -19,7 +19,7 @@ class RRT_arm():
         self.arm_len = lower_arm_length + upper_arm_length
 
         ## Dynamics values
-        self.start_config = [0, math.pi/1.5, -math.pi/1.5]
+        self.start_config = [0, math.pi/1.5, -math.pi/1.2]
         self.theta = self.start_config[0]
         self.phi = self.start_config[1]
         self.psi = self.start_config[2]
@@ -141,10 +141,11 @@ class RRT_arm():
 
         ax.set_zlim3d([0, self.arm_len+0.01])
         ax.set_zlabel('Z')
-        
+        ax.view_init(elev=45., azim=100)
+
 
         ani2 = animation.FuncAnimation(fig, update, N, fargs=(data, line), interval=1000/N, blit=False)
-        # ani2.save('matplot003.gif', writer='imagemagick')
+        # ani2.save('Dynamics.gif', writer='imagemagick')
         plt.show()
 
 
@@ -232,7 +233,7 @@ class RRT_arm():
             closest_point = self.point_list[index_min]
 
             ### Check if Connections with other points can be made in order to create quicker paths between current point and starting point
-            ## CODE
+            ## CODE HERE
             
             # check for obstacles on the new line
             if self.obstacle_detection(closest_point.flatten(),current_point) == True:
@@ -305,7 +306,7 @@ class RRT_arm():
 
         data = self.world_set()
 
-    # Voxels is used to customizations of the sizes, positions and colors.
+        # Voxels is used to customizations of the sizes, positions and colors.
 
         for c in range(data.shape[0]):
             # first set the world empty without obstacles
@@ -360,24 +361,24 @@ class RRT_arm():
         steps = 20
         dataset = np.zeros((steps,steps,steps),dtype=bool)
         for i in tqdm(range(steps)):
-            theta_pos = (i/steps-1/2)*2*math.pi
+            theta_pos = (i/steps)*2*math.pi
             for j in range(steps):
-                phi_pos = (j/steps-1/2)*2*math.pi
+                phi_pos = (j/steps)*2*math.pi
                 for k in range(steps):
-                    psi_pos = (k/steps-1/2)*2*math.pi
+                    psi_pos = (k/steps)*2*math.pi
                     if self.check_configuration(theta_pos, phi_pos, psi_pos):
                         dataset[i,j,k] = True
                         
-        print(np.count_nonzero(dataset), 20**3 - np.count_nonzero(dataset))
         theta_vox, phi_vox, psi_vox = np.indices((dataset.shape[0]+1, dataset.shape[1]+1, dataset.shape[2]+1)) * math.pi / steps
         ax_obs.voxels(theta_vox, phi_vox, psi_vox, dataset, facecolors=[1, 0, 0, 0.5], edgecolors=[0.1,0.1,0.1,0.01])
 
         # dataset_invert = np.invert(dataset)
         # ax_obs.voxels(theta_vox, phi_vox, psi_vox, dataset_invert, facecolors=[0, 1, 0, 0.05], edgecolors=[0.1,0.1,0.1,0.1])
 
-        ax_obs.scatter(self.start_config[0],self.start_config[1],self.start_config[2],marker='o',s=50,color='blue', label='start')
-        # ax_obs.scatter(self.goal[0],self.goal[1],self.goal[2],marker='o',s=50,color='green', label='goal')
+        # goal_angles = self.config_based_on_position
+        # ax_obs.scatter(goal_angles[0],goal_angles[1],goal_angles[2],marker='o',s=50,color='blue', label='start')
 
+        ax_obs.scatter(self.start_config[0],self.start_config[1],self.start_config[2],marker='o',s=50,color='blue', label='start')
 
         ax_obs.set_xlabel('Theta')
         ax_obs.set_ylabel('Phi')
@@ -386,12 +387,14 @@ class RRT_arm():
         plt.show()
 
     def config_based_on_position(self):
-        self.goal
-
+        #### try to reverse this proces, get angles from position
+        ## Howevere always two configuration for the robot arm are possible  making it practically unable to solve favorable all the time
         x = np.cos(self.theta)*(self.lower_arm_length*np.cos(self.phi)+self.upper_arm_length*np.cos(self.phi+self.psi)) + self.translation[0]
         y = np.sin(self.theta)*(self.lower_arm_length*np.cos(self.phi)+self.upper_arm_length*np.cos(self.phi+self.psi)) + self.translation[1]
         z = (self.height_base+self.lower_arm_length*np.sin(self.phi)+self.upper_arm_length*np.sin(self.phi+self.psi)) + self.translation[2]
-        return
+
+        #theta, phi, psi = solve(x,y,z)
+        return #[theta, phi, psi]
 
     def check_configuration(self,theta_pos,psi_pos,phi_pos):
         self.theta = theta_pos
@@ -399,12 +402,16 @@ class RRT_arm():
         self.phi = phi_pos
         arm_config = self.draw_arm()
         if (arm_config[:,2] < -0.01).any():
+            print("FLOOR")
             return True
-        elif self.obstacle_detection(arm_config[0,:], arm_config[1,:]) == False: ## Self.obstacle_detection
+        elif self.obstacle_detection(arm_config[0], arm_config[1]) == False: ## Self.obstacle_detection
+            print("BASE")
             return True
         elif self.obstacle_detection(arm_config[1], arm_config[2]) == False: ## Self.obstacle_detection
+            print("LOWER")
             return True
         elif self.obstacle_detection(arm_config[2], arm_config[3]) == False: ## Self.obstacle_detection
+            print("UPPER")
             return True
         else:
             return False
@@ -457,15 +464,12 @@ class RRT_arm():
         
         def gen(n):
             for i in range(n):
-                yield self.RRT_star()
+                yield self.RRT()#_star()
 
         _ = np.array(list(gen(amount_nodes)))
         data = self.line_list.T
-        print(data.shape)
 
         def update(num):
-            print(num)
-
             ax_rrt.plot((data[0,:,num].flatten()), (data[1,:,num].flatten()), (data[2,:,num].flatten()), linewidth=1,color='red')
                          
       
@@ -487,16 +491,17 @@ class RRT_arm():
 
         ax_rrt.set_zlim3d([0, self.arm_len+0.01])
         ax_rrt.set_zlabel('Z')
+        ax_rrt.view_init(elev=45., azim=100)
         
         if self.path_found:
-            ani1 = animation.FuncAnimation(fig2, update, frames=data.shape[2], interval=100, blit=False, repeat=False) ## interval=1000ms, fargs=(data,line),
+            ani1 = animation.FuncAnimation(fig2, update, frames=data.shape[2], interval=20, blit=False, repeat=False) ## interval=1000ms, fargs=(data,line),
 
         ## FInding and printing the shortest path between the start and goal
 
-        # ani1.save('matplot001.gif', writer='imagemagick') ### Save the animation of the gif
+        # ani1.save('path_planning.gif', writer='imagemagick') ### Save the animation of the gif
         plt.show()
-
-        self.static_RRT_plot(data)
+        if self.path_found:
+            self.static_RRT_plot(data)
 
         return self.path_found
 
@@ -505,7 +510,6 @@ class RRT_arm():
         ax4 = fig4.add_subplot(projection='3d')         
 
         ax4.voxels(self.x_obs, self.y_obs, self.z_obs, self.data_obstacles, facecolors=[1, 0, 0, 0.1], edgecolors='grey')
-        print(data.shape)
                          
       
         ### Beginning position plotting
@@ -526,15 +530,14 @@ class RRT_arm():
 
         ax4.set_zlim3d([0, self.arm_len+0.01])
         ax4.set_zlabel('Z')
+        ax4.view_init(elev=45., azim=100)
 
-        
-        
+
         if self.path_found:
             for i in range(data.shape[2]):
                 ax4.plot(data[0,:,i].flatten(), data[1,:,i].flatten(),data[2,:,i].flatten(),linewidth=1,color='red')
 
         path = self.find_path()
-        print(path.shape)
         ax4.plot(path[:,0], path[:,1], path[:,2], linewidth=3, color='blue')
         plt.show()
         
