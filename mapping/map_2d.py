@@ -18,8 +18,8 @@ class Map:
 
     def findCenters(self):
         cellsCenters = []
-        for x in np.arange(self.worldStart_[0] - self.nodeDist_ / 2, self.worldXlim_, self.nodeDist_):
-            for y in np.arange(self.worldStart_[1] - self.nodeDist_ / 2, self.worldYlim_, self.nodeDist_):
+        for x in np.arange(self.worldStart_[0] + self.nodeDist_ / 2, self.worldXlim_, self.nodeDist_):
+            for y in np.arange(self.worldStart_[1] + self.nodeDist_ / 2, self.worldYlim_, self.nodeDist_):
                 cellsCenters.append((x, y))
         return cellsCenters
 
@@ -92,18 +92,14 @@ class Map:
         # Plot interactively if path is added to map
         if self.foundPath_ is not None:
             ax.plot(*zip(*self.foundPath_), color="g")
-            for position in self.foundPath_:
-                plt.draw()
-                ax.scatter3D(position[0], position[1], 0, color="g", s=1)
 
-                # Plot robot on path starting point
-                self.Robot_.setBasePosition(position)
-                self.plotRobot3D(ax=ax)
-                plt.pause(0.1)
+            # Plot robot on path starting point
+            self.Robot_.setBasePosition(self.foundPath_[0])
+            self.plotRobot3D(ax=ax)
         else:
             self.plotGrid3D()
-
         plt.show()
+
 
     def plotCylinder(self, ax, center_x, center_y, radius, height_z):
         z = np.linspace(0, height_z, 50)

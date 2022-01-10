@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import distance
 
+
 # A* slightlty inspired by Sebastian League https://github.com/SebLague/Pathfinding
 
 class A_star:
@@ -58,7 +59,7 @@ class A_star:
 
             # Check if goal is found
             if current_node.position == end:
-                return self.getPath(current_node) # Return path and exit loop
+                return self.getPath(current_node)  # Return path and exit loop
 
             # Find adjacent nodes
             children = self.findAdjacent(current_node)
@@ -93,10 +94,10 @@ class A_star:
         children = []
         for movement in self.movements_:
             new_position = (currentNode.position[0] + movement[0], currentNode.position[1] + movement[1])
-            if new_position[0] <= np.min(self.worldLims_["x"]) or \
-                    new_position[0] > np.max(self.worldLims_["x"]) or \
-                    new_position[1] <= np.min(self.worldLims_["y"]) or \
-                    new_position[1] > np.max(self.worldLims_["y"]):
+            if new_position[0] <= min(self.worldLims_["x"]) or \
+                    new_position[0] > max(self.worldLims_["x"]) or \
+                    new_position[1] <= min(self.worldLims_["y"]) or \
+                    new_position[1] > max(self.worldLims_["y"]):
                 continue
 
             if new_position not in self.obstructedNodes_:
