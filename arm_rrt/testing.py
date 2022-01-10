@@ -13,13 +13,13 @@ def gen(n):
         phi += 2*np.pi/n
 
 def update(num, data, line):
-    print(data[:2, :num].shape)
-    print(data[2, :num].shape)
+    print(data.shape, num)
     line.set_data(data[:2, :num])
     line.set_3d_properties(data[2, :num])
 
 N = 100
 data = np.array(list(gen(N))).T
+print(data.shape)
 line, = ax.plot(data[0, 0:1], data[1, 0:1], data[2, 0:1])
 
 # Setting the axes properties
