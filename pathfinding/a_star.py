@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import distance
 
+# A* slightlty inspired by Sebastian League https://github.com/SebLague/Pathfinding
 
 class A_star:
     def __init__(self, Map):
@@ -20,7 +21,7 @@ class A_star:
                 movements.append((i * self.nodeDist_, j * self.nodeDist_))
         return movements
 
-    def search_path(self, start, end):
+    def searchPath(self, start, end):
         print('Looking for path...')
 
         # Get suitable start/goal positions
@@ -57,7 +58,7 @@ class A_star:
 
             # Check if goal is found
             if current_node.position == end:
-                return self.getPath(current_node)
+                return self.getPath(current_node) # Return path and exit loop
 
             # Find adjacent nodes
             children = self.findAdjacent(current_node)
@@ -109,9 +110,8 @@ class A_star:
         current = currentNode
         while current is not None:
             path.append(current.position)
-            plt.scatter(current.position[0], current.position[1], color="g")
             current = current.parent
-        return path[::-1]  # return reverse path and gets out of the loop
+        return path[::-1]  # return reverse path
 
 
 class Node:
